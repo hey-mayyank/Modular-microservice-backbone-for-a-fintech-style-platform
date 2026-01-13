@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  postgres-auth:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: fintech
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5433:5432"
+
+  postgres-transactions:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: transactions_db
+      POSTGRES_USER: fintech
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5434:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    env_file: .env
+
+  auth-service:
+    build: ./services/auth-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres-auth
+      - redis
+    env_file: .env
+
+  transactions-service:
+    build: ./services/transactions-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres-transactions
+      - redis
+    env_file: .env
